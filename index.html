@@ -696,6 +696,19 @@
       letter-spacing: -0.01em;
     }
     .section-head h2 .italic { font-size: 0.7em; color: var(--denim); }
+
+    /* BST heading — each word in its own span so we can align baselines
+       explicitly. The serif italic sits visually lower than Anton caps
+       even when the text baselines match, so nudge 'sell' up a hair. */
+    .bst-heading {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      column-gap: 0.22em;
+      row-gap: 0;
+    }
+    .bst-heading .bst-dot { color: var(--denim); }
+    .bst-heading .bst-sell { transform: translateY(-0.08em); }
     .section-head .aside {
       font-size: var(--fs-sm);
       color: var(--cream-dim);
@@ -1184,19 +1197,21 @@
       margin-top: var(--sp-8);
       background: var(--ink);
     }
+    /* Stacked two-line wordmark: keeps the dramatic oversized feel but
+       never clips, because each line is its own block and the whole mark
+       grows/shrinks with the viewport. */
     .footer-mark {
       font-family: var(--f-display);
-      font-size: clamp(5rem, 18vw, 18rem);
-      line-height: 0.8;
+      font-size: clamp(3.6rem, 13vw, 14rem);
+      line-height: 0.86;
       letter-spacing: -0.02em;
       text-transform: uppercase;
       color: var(--cream);
       margin-bottom: var(--sp-6);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: clip;
+      display: flex;
+      flex-direction: column;
     }
-    .footer-mark .italic { color: var(--denim); font-size: 0.7em; }
+    .footer-mark__line { display: block; }
     .footer-grid {
       display: grid;
       grid-template-columns: 1fr;
@@ -1424,7 +1439,13 @@
       <div class="wrap">
         <div class="section-head">
           <span class="section-num">02 / The Exchange</span>
-          <h2 id="bst-h">Buy · <span class="italic">sell</span> · trade.</h2>
+          <h2 id="bst-h" class="bst-heading">
+            <span>Buy</span>
+            <span class="bst-dot" aria-hidden="true">·</span>
+            <span class="italic bst-sell">sell</span>
+            <span class="bst-dot" aria-hidden="true">·</span>
+            <span>trade.</span>
+          </h2>
           <p class="aside">
             Got a closet full of pieces you don't wear? Bring them by during open hours — we'll take a look.
           </p>
@@ -1725,7 +1746,8 @@
   <footer class="site-footer" role="contentinfo">
     <div class="wrap">
       <div class="footer-mark" aria-hidden="true">
-        Flow <span class="italic">state</span> vintage
+        <span class="footer-mark__line">Flow State</span>
+        <span class="footer-mark__line">Vintage</span>
       </div>
 
       <div class="footer-grid">
