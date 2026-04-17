@@ -314,6 +314,8 @@
       z-index: 50;
       background: var(--ink);
       border-bottom: 1px solid var(--line);
+      transition: transform .38s var(--ease);
+      will-change: transform;
     }
     @media (min-width: 900px) {
       .site-header {
@@ -321,6 +323,15 @@
         backdrop-filter: blur(14px) saturate(140%);
         -webkit-backdrop-filter: blur(14px) saturate(140%);
       }
+    }
+    /* Mobile-only auto-hide on scroll down (JS adds/removes .is-hidden).
+       -101% ensures the 1px border bottom hides too. */
+    @media (max-width: 899px) {
+      .site-header.is-hidden { transform: translateY(-101%); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .site-header { transition: none; }
+      .site-header.is-hidden { transform: none; }
     }
     .nav {
       display: flex;
@@ -1848,6 +1859,7 @@
     document.getElementById("year").textContent = new Date().getFullYear();
 
     /* Mobile menu */
+    const siteHeader = document.querySelector(".site-header");
     const menuBtn = document.querySelector(".menu-btn");
     const drawer = document.getElementById("mobile-drawer");
     const toggleMenu = (open) => {
@@ -1856,10 +1868,51 @@
       drawer.setAttribute("aria-hidden", String(!next));
       menuBtn.setAttribute("aria-expanded", String(next));
       document.body.style.overflow = next ? "hidden" : "";
+      if (next) siteHeader?.classList.remove("is-hidden");
     };
     menuBtn.addEventListener("click", () => toggleMenu());
     drawer.querySelectorAll("a").forEach(a => a.addEventListener("click", () => toggleMenu(false)));
     window.addEventListener("keydown", e => { if (e.key === "Escape") toggleMenu(false); });
+
+    /* Mobile auto-hide header on scroll — hides on scroll down, reveals on
+       scroll up. Suspended on desktop and when reduced-motion is preferred.
+       Always visible near the top and while the drawer is open. */
+    (() => {
+      if (!siteHeader) return;
+      const mobileMQ = window.matchMedia("(max-width: 899px)");
+      const reduceMQ = window.matchMedia("(prefers-reduced-motion: reduce)");
+      const THRESHOLD = 8;
+      const TOP_ZONE = 80;
+      let lastY = window.scrollY;
+      let ticking = false;
+
+      const update = () => {
+        ticking = false;
+        if (!mobileMQ.matches || reduceMQ.matches) {
+          siteHeader.classList.remove("is-hidden");
+          lastY = window.scrollY;
+          return;
+        }
+        if (drawer.dataset.open === "true") {
+          siteHeader.classList.remove("is-hidden");
+          lastY = window.scrollY;
+          return;
+        }
+        const y = window.scrollY;
+        const dy = y - lastY;
+        if (Math.abs(dy) < THRESHOLD) return;
+        if (y < TOP_ZONE) siteHeader.classList.remove("is-hidden");
+        else if (dy > 0) siteHeader.classList.add("is-hidden");
+        else siteHeader.classList.remove("is-hidden");
+        lastY = y;
+      };
+
+      window.addEventListener("scroll", () => {
+        if (!ticking) { requestAnimationFrame(update); ticking = true; }
+      }, { passive: true });
+
+      mobileMQ.addEventListener("change", () => siteHeader.classList.remove("is-hidden"));
+    })();
 
     /* FAQ accordion */
     document.querySelectorAll(".faq-q").forEach(btn => {
